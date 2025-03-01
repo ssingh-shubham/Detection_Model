@@ -3,6 +3,7 @@ Configuration settings for the face recognition system
 """
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Camera settings
 CAMERA = {
     'index': 0,  # Default camera (0 is usually built-in webcam)
@@ -27,5 +28,6 @@ PATHS = {
     'image_dir': 'images',
     'cascade_file': 'haarcascade_frontalface_default.xml',
     'names_file': 'names.json',
-    'trainer_file': 'trainer.yml'
+    'trainer_file': 'trainer.yml',
+    'criminal_records': 'criminal_records.json',
 }

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criminal Face Recognition System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #64748b;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #f8fafc;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        header {
+            background-color: var(--dark);
+            color: var(--text-light);
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #9ca3af;
+        }
+
+        .status-indicator.connected {
+            background-color: var(--success);
+        }
+
+        .status-indicator.disconnected {
+            background-color: var(--danger);
+        }
+        
+        .dashboard {
+            padding: 2rem 0;
+        }
+
+        .controls-wrapper {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        .video-feeds {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        
+        .video-feed {
+            position: relative;
+        }
+        
+        .video-feed-title {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .video-feed-title i {
+            color: var(--primary);
+        }
+        
+        .video-container {
+            position: relative;
+            aspect-ratio: 4/3;
+            background-color: #0f172a;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        
+        #videoElement, #processedVideoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius);
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .video-overlay.live {
+            background-color: rgba(239, 68, 68, 0.8);
+        }
+
+        .video-overlay i {
+            font-size: 0.75rem;
+        }
+        
+        .upload-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+
+        .file-input-label i {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .file-input-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--primary);
+        }
+
+        #imageUpload {
+            position: absolute;
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .detection-info {
+            height: 100%;
+        }
+
+        .no-results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 200px;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        .criminal-card, .unknown-card {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: var(--radius);
+            background-color: white;
+            border-left: 4px solid;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .criminal-card {
+            border-left-color: var(--danger);
+        }
+        
+        .unknown-card {
+            border-left-color: var(--warning);
+        }
+
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .person-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .criminal-card .person-name i {
+            color: var(--danger);
+        }
+
+        .unknown-card .person-name i {
+            color: var(--warning);
+        }
+
+        .confidence-badge {
+            background-color: #e2e8f0;
+            color: var(--text-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .person-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-item {
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .crime-list {
+            margin-top: 0.75rem;
+            padding-left: 1.5rem;
+        }
+
+        .crime-list li {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            position: relative;
+        }
+
+        .crime-list li::before {
+            content: "•";
+            color: var(--danger);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #f8fafc;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: #059669;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .video-feeds {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .system-status {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .person-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0f172a;
+                color: #f8fafc;
+            }
+
+            .card, .controls-wrapper {
+                background-color: #1e293b;
+                border-color: #334155;
+            }
+
+            .card-header {
+                border-color: #334155;
+            }
+
+            .file-input-label {
+                border-color: #334155;
+            }
+
+            .file-input-label:hover {
+                background-color: rgba(79, 70, 229, 0.1);
+            }
+
+            .criminal-card, .unknown-card {
+                background-color: #1e293b;
+            }
+
+            .btn-secondary {
+                background-color: #334155;
+                color: #f8fafc;
+                border-color: #475569;
+            }
+
+            .btn-secondary:hover:not(:disabled) {
+                background-color: #475569;
+            }
+
+            .confidence-badge {
+                background-color: #334155;
+                color: #e2e8f0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>Criminal Face Recognition System</h1>
+                </div>
+                <div id="status" class="system-status">
+                    <span id="statusIndicator" class="status-indicator"></span>
+                    <span id="statusText">Not connected to API</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="dashboard">
+        <div class="container">
+            <div class="controls-wrapper">
+                <div class="controls">
+                    <button id="startButton" class="btn btn-primary">
+                        <i class="fas fa-video"></i>
+                        Start Camera
+                    </button>
+                    <button id="stopButton" class="btn btn-danger" disabled>
+                        <i class="fas fa-video-slash"></i>
+                        Stop Camera
+                    </button>
+                    <button id="captureButton" class="btn btn-secondary" disabled>
+                        <i class="fas fa-camera"></i>
+                        <span id="captureButtonText">Start Capture</span>
+                    </button>
+                    <button id="connectButton" class="btn btn-secondary">
+                        <i class="fas fa-plug"></i>
+                        Connect to API
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-camera-retro"></i>
+                            Video Feeds
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="video-feeds">
+                            <div class="video-feed">
+                                <h3 class="video-feed-title">
+                                    <i class="fas fa-video"></i>
+                                    Camera Feed
+                                </h3>
+                                <div class="video-container">
+                                    <video id="videoElement" autoplay></video>
+                                    <div id="liveIndicator" class="video-overlay live" style="display: none;">
+                                        <i class="fas fa-circle pulse"></i>
+                                        LIVE
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-feed">
+                                <h3 class="video-feed-title">
+                                    <i class="fas fa-eye"></i>
+                                    Processed Feed
+                                </h3>
+                                <div class="video-container">
+                                    <img id="processedVideoElement" src="/placeholder.svg" alt="Processed video will appear here">
+                                    <div id="processingIndicator" class="video-overlay" style="display: none;">
+                                        <i class="fas fa-cog fa-spin"></i>
+                                        PROCESSING
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-section">
+                            <h3 class="video-feed-title">
+                                <i class="fas fa-upload"></i>
+                                Upload Image
+                            </h3>
+                            <div class="file-input-wrapper">
+                                <label for="imageUpload" class="file-input-label">
+                                    <i class="fas fa-file-image"></i>
+                                    <span class="file-input-text">Drag and drop an image or click to browse</span>
+                                    <span id="fileName" class="file-name"></span>
+                                </label>
+                                <input type="file" id="imageUpload" accept="image/*">
+                            </div>
+                            <button id="uploadButton" class="btn btn-primary">
+                                <i class="fas fa-upload"></i>
+                                Upload & Process
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-search"></i>
+                            Detection Results
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="detectionResults" class="detection-info">
+                            <div class="no-results">
+                                <i class="fas fa-face-meh"></i>
+                                <p>No faces detected yet.</p>
+                                <p>Start the camera or upload an image to begin detection.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Configuration
+        const API_URL = 'http://192.168.1.102:8080'; // Change this to your API URL
+        const FPS = 10; // Frames per second to send to API
+        
+        // DOM Elements
+        const videoElement = document.getElementById('videoElement');
+        const processedVideoElement = document.getElementById('processedVideoElement');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const captureButton = document.getElementById('captureButton');
+        const captureButtonText = document.getElementById('captureButtonText');
+        const connectButton = document.getElementById('connectButton');
+        const statusElement = document.getElementById('status');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const detectionResults = document.getElementById('detectionResults');
+        const imageUpload = document.getElementById('imageUpload');
+        const fileName = document.getElementById('fileName');
+        const uploadButton = document.getElementById('uploadButton');
+        const liveIndicator = document.getElementById('liveIndicator');
+        const processingIndicator = document.getElementById('processingIndicator');
+        
+        // Global variables
+        let stream = null;
+        let isCapturing = false;
+        let captureInterval = null;
+        let isConnected = false;
+        
+        // Event Listeners
+        startButton.addEventListener('click', startCamera);
+        stopButton.addEventListener('click', stopCamera);
+        captureButton.addEventListener('click', toggleCapture);
+        connectButton.addEventListener('click', testConnection);
+        uploadButton.addEventListener('click', uploadImage);
+        
+        // Show file name when selected
+        imageUpload.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+            } else {
+                fileName.textContent = '';
+            }
+        });
+        
+        // Functions
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 640,
+                        height: 480 
+                    } 
+                });
+                videoElement.srcObject = stream;
+                
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                captureButton.disabled = false;
+                
+                updateStatus('Camera started');
+            } catch (err) {
+                updateStatus(`Error accessing camera: ${err.message}`, true);
+                console.error('Error accessing camera:', err);
+            }
+        }
+        
+        function stopCamera() {
+            if (isCapturing) {
+                toggleCapture();
+            }
+            
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+            
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            captureButton.disabled = true;
+            liveIndicator.style.display = 'none';
+            
+            updateStatus('Camera stopped');
+        }
+        
+        function toggleCapture() {
+            if (isCapturing) {
+                clearInterval(captureInterval);
+                isCapturing = false;
+                captureButtonText.textContent = 'Start Capture';
+                captureButton.classList.remove('btn-success');
+                captureButton.classList.add('btn-secondary');
+                liveIndicator.style.display = 'none';
+                updateStatus('Capture stopped');
+            } else {
+                if (!isConnected) {
+                    updateStatus('Please connect to API first', true);
+                    return;
+                }
+                
+                isCapturing = true;
+                captureButtonText.textContent = 'Stop Capture';
+                captureButton.classList.remove('btn-secondary');
+                captureButton.classList.add('btn-success');
+                liveIndicator.style.display = 'flex';
+                updateStatus('Capturing video...');
+                
+                // Start capturing frames
+                captureAndProcess();
+                captureInterval = setInterval(captureAndProcess, 1000 / FPS);
+            }
+        }
+        
+        function captureAndProcess() {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            // Get base64 image data
+            const imageData = canvas.toDataURL('image/jpeg').split(',')[1];
+            
+            // Show processing indicator
+            processingIndicator.style.display = 'flex';
+            
+            // Send to API
+            sendImageToAPI(imageData);
+        }
+        
+        async function sendImageToAPI(imageData) {
+            try {
+                const response = await fetch(`${API_URL}/detect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display processed image
+                processedVideoElement.src = `data:image/jpeg;base64,${data.processed_image}`;
+                
+                // Hide processing indicator
+                processingIndicator.style.display = 'none';
+                
+                // Display detection results
+                displayDetectionResults(data.detections);
+            } catch (err) {
+                updateStatus(`Error processing image: ${err.message}`, true);
+                console.error('Error processing image:', err);
+                
+                // Hide processing indicator
+                processingIndicator.style.display = 'none';
+                
+                if (isCapturing) {
+                    toggleCapture(); // Stop capturing on error
+                }
+            }
+        }
+        
+        async function uploadImage() {
+            if (!imageUpload.files || imageUpload.files.length === 0) {
+                updateStatus('Please select an image to upload', true);
+                return;
+            }
+            
+            if (!isConnected) {
+                updateStatus('Please connect to API first', true);
+                return;
+            }
+            
+            const file = imageUpload.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                updateStatus('Uploading and processing image...');
+                
+                // Show processing indicator
+                processingIndicator.style.display = 'flex';
+                
+                // Change button to loading state
+                uploadButton.disabled = true;
+                uploadButton.innerHTML = '<span class="loading-spinner"></span> Processing...';
+                
+                const response = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display processed image
+                processedVideoElement.src = `data:image/jpeg;base64,${data.processed_image}`;
+                
+                // Hide processing indicator
+                processingIndicator.style.display = 'none';
+                
+                // Display detection results
+                displayDetectionResults(data.detections);
+                
+                updateStatus('Image processed successfully');
+            } catch (err) {
+                updateStatus(`Error uploading image: ${err.message}`, true);
+                console.error('Error uploading image:', err);
+                
+                // Hide processing indicator
+                processingIndicator.style.display = 'none';
+            } finally {
+                // Reset button state
+                uploadButton.disabled = false;
+                uploadButton.innerHTML = '<i class="fas fa-upload"></i> Upload & Process';
+            }
+        }
+        
+        function displayDetectionResults(detections) {
+            if (detections.length === 0) {
+                detectionResults.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-face-meh"></i>
+                        <p>No faces detected.</p>
+                        <p>Try adjusting the camera or uploading a different image.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<p>Detected ${detections.length} face(s):</p>`;
+            
+            detections.forEach((detection, index) => {
+                const isCriminal = detection.criminal_record !== null;
+                const cardClass = isCriminal ? 'criminal-card' : 'unknown-card';
+                const icon = isCriminal ? 'fa-user-secret' : 'fa-user';
+                
+                html += `<div class="${cardClass}">`;
+                html += `
+                    <div class="person-header">
+                        <h3 class="person-name">
+                            <i class="fas ${icon}"></i>
+                            ${detection.name}
+                        </h3>
+                        <span class="confidence-badge">${detection.confidence}% match</span>
+                    </div>
+                `;
+                
+                if (isCriminal) {
+                    const record = detection.criminal_record;
+                    
+                    html += `<div class="person-details">`;
+                    
+                    if (record.sex) {
+                        html += `
+                            <div class="detail-item">
+                                <div class="detail-label">Sex</div>
+                                <div class="detail-value">${record.sex}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (record.age) {
+                        html += `
+                            <div class="detail-item">
+                                <div class="detail-label">Age</div>
+                                <div class="detail-value">${record.age}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (record.address) {
+                        html += `
+                            <div class="detail-item">
+                                <div class="detail-label">Address</div>
+                                <div class="detail-value">${record.address}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                    
+                    if (record.crimes && record.crimes.length > 0) {
+                        html += '<div class="detail-label">Criminal History:</div>';
+                        html += '<ul class="crime-list">';
+                        record.crimes.forEach(crime => {
+                            html += `<li>${crime}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                } else {
+                    html += `
+                        <div class="person-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value">Unknown Person</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+            });
+            
+            detectionResults.innerHTML = html;
+        }
+        
+        async function testConnection() {
+            try {
+                // Change button to loading state
+                connectButton.disabled = true;
+                connectButton.innerHTML = '<span class="loading-spinner"></span> Connecting...';
+                
+                updateStatus('Connecting to API...');
+                
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Connection Response:', data);
+                
+                isConnected = true;
+                statusIndicator.classList.add('connected');
+                statusIndicator.classList.remove('disconnected');
+                updateStatus('Connected to API');
+            } catch (err) {
+                isConnected = false;
+                statusIndicator.classList.remove('connected');
+                statusIndicator.classList.add('disconnected');
+                updateStatus(`Failed to connect to API: ${err.message}`, true);
+                console.error('API connection error:', err);
+            } finally {
+                // Reset button state
+                connectButton.disabled = false;
+                connectButton.innerHTML = '<i class="fas fa-plug"></i> Connect to API';
+            }
+        }
+        
+        function updateStatus(message, isError = false) {
+            statusText.textContent = message;
+            
+            if (isError) {
+                statusIndicator.classList.add('disconnected');
+                statusIndicator.classList.remove('connected');
+            }
+        }
+        
+        // Test connection on page load
+        window.addEventListener('load', testConnection);
+    </script>
+</body>
+</html>
+
