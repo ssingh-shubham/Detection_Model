@@ -358,4 +358,4 @@ async def get_criminal_record(criminal_id: str):
     return criminal_records[criminal_id]
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
