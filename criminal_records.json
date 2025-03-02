@@ -1,54 +1,14 @@
 {
     "1": {
-        "name": "Het ",
-        "sex": "M",
-        "age": "21",
-        "address": "Western Hills Phase 2 ",
-        "crimes": [
-            "Robbery ",
-            " Murder "
-        ],
-        "notes": null,
-        "registration_date": "2025-03-02"
-    },
-    "2": {
-        "name": "Het Sevalia",
-        "sex": "M",
-        "age": "21",
-        "address": "Westernhills phase 69",
-        "crimes": [
-            "Murder",
-            "Financial Scams",
-            "Bribery"
-        ],
-        "notes": "Tall like 6'2",
-        "registration_date": "2025-03-01"
-    },
-    "3": {
         "name": "Shubham Singh",
         "sex": "M",
         "age": "22",
         "address": "Western Hills",
         "crimes": [
-            "robbery",
-            "murder"
+            "Murder",
+            "Robbery"
         ],
         "notes": "mole on neck",
-        "registration_date": "2025-03-01"
-    },
-    "4": {
-        "name": "Shubh Agarwal",
-        "sex": "M",
-        "age": "21",
-        "address": "Wesstern HILLS",
-        "crimes": [
-            "Robbery",
-            "Murder",
-            "NA",
-            "NA",
-            "NA"
-        ],
-        "notes": "",
         "registration_date": "2025-03-02"
     }
 }

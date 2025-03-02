@@ -11,10 +11,13 @@ from typing import Any, Dict, List, Optional
 
 import cv2
 import numpy as np
-from flask import Flask, Response, jsonify, request, send_file
-from flask_cors import CORS
+import uvicorn
+from fastapi import (Body, FastAPI, File, Form, HTTPException, Request,
+                     UploadFile)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
-from werkzeug.utils import secure_filename
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -35,14 +38,38 @@ FACE_DETECTION = {
 PATHS = {
     'cascade_file': cv2.data.haarcascades + 'haarcascade_frontalface_default.xml',
     'trainer_file': 'trainer.yml',
-    'names_file': 'names.json',
+    'names_file': 'criminal_names.json',
     'criminal_records': 'criminal_records.json'
 }
 
-# Initialize Flask app
-app = Flask(__name__)
+# Pydantic models for request and response
+class FrameData(BaseModel):
+    image: str  # Base64 encoded image
+
+class DetectionResult(BaseModel):
+    processed_image: str  # Base64 encoded processed image
+    detections: List[Dict[str, Any]]  # Detection information
+
+class CriminalRecord(BaseModel):
+    id: str
+    name: str
+    sex: Optional[str] = None
+    age: Optional[int] = None
+    address: Optional[str] = None
+    crimes: List[str] = []
+
+# Initialize FastAPI app
+app = FastAPI(title="Criminal Face Recognition API",
+             description="API for detecting and identifying faces in images with criminal records overlay")
+
 # Configure CORS
-CORS(app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Global variables for face recognition
 face_cascade = None
@@ -50,6 +77,13 @@ recognizer = None
 names = {}
 criminal_records = {}
 confidence_threshold = 40
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize components when the application starts"""
+    success = initialize_face_recognition()
+    if not success:
+        logger.error("Failed to initialize face recognition components")
 
 def initialize_face_recognition():
     """Initialize face recognition components"""
@@ -253,33 +287,22 @@ def display_criminal_info(img, criminal_record, position, width):
         cv2.putText(img, f"...and {len(crimes)-2} more", (x+10, y_offset), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-# Initialize face recognition before app starts
-# Execute initialize_face_recognition on import
-success = initialize_face_recognition()
-if not success:
-    logger.error("Failed to initialize face recognition components")
-
-@app.route("/")
-def root():
+@app.get("/")
+async def root():
     """API root endpoint"""
-    return jsonify({"message": "Criminal Face Recognition API is running"})
+    return {"message": "Criminal Face Recognition API is running"}
 
-@app.route("/detect", methods=["POST"])
-def detect_faces():
+@app.post("/detect", response_model=DetectionResult)
+async def detect_faces(frame_data: FrameData):
     """Detect faces in an uploaded image"""
     try:
-        # Get JSON data
-        data = request.get_json()
-        if not data or 'image' not in data:
-            return jsonify({"error": "Missing image data"}), 400
-        
         # Decode base64 image
-        img_bytes = base64.b64decode(data['image'])
+        img_bytes = base64.b64decode(frame_data.image)
         nparr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            return jsonify({"error": "Invalid image data"}), 400
+            raise HTTPException(status_code=400, detail="Invalid image data")
         
         # Process image
         processed_img, detections = process_image(img)
@@ -288,33 +311,24 @@ def detect_faces():
         _, buffer = cv2.imencode('.jpg', processed_img)
         processed_b64 = base64.b64encode(buffer).decode('utf-8')
         
-        return jsonify({
-            "processed_image": processed_b64,
-            "detections": detections
-        })
+        return DetectionResult(
+            processed_image=processed_b64,
+            detections=detections
+        )
     except Exception as e:
         logger.error(f"Error processing image: {e}")
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.route("/upload", methods=["POST"])
-def upload_image():
+@app.post("/upload", response_model=DetectionResult)
+async def upload_image(file: UploadFile = File(...)):
     """Process an uploaded image file"""
     try:
-        # Check if file is in request
-        if 'file' not in request.files:
-            return jsonify({"error": "No file provided"}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "Empty file name"}), 400
-        
-        # Read file content
-        contents = file.read()
+        contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            return jsonify({"error": "Invalid image file"}), 400
+            raise HTTPException(status_code=400, detail="Invalid image file")
         
         # Process image
         processed_img, detections = process_image(img)
@@ -323,25 +337,25 @@ def upload_image():
         _, buffer = cv2.imencode('.jpg', processed_img)
         processed_b64 = base64.b64encode(buffer).decode('utf-8')
         
-        return jsonify({
-            "processed_image": processed_b64,
-            "detections": detections
-        })
+        return DetectionResult(
+            processed_image=processed_b64,
+            detections=detections
+        )
     except Exception as e:
         logger.error(f"Error processing uploaded file: {e}")
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.route("/criminals", methods=["GET"])
-def get_criminal_records():
+@app.get("/criminals", response_model=Dict[str, CriminalRecord])
+async def get_criminal_records():
     """Get all criminal records"""
-    return jsonify(criminal_records)
+    return criminal_records
 
-@app.route("/criminal/<criminal_id>", methods=["GET"])
-def get_criminal_record(criminal_id):
+@app.get("/criminal/{criminal_id}", response_model=CriminalRecord)
+async def get_criminal_record(criminal_id: str):
     """Get a specific criminal record by ID"""
     if criminal_id not in criminal_records:
-        return jsonify({"error": "Criminal record not found"}), 404
-    return jsonify(criminal_records[criminal_id])
+        raise HTTPException(status_code=404, detail="Criminal record not found")
+    return criminal_records[criminal_id]
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

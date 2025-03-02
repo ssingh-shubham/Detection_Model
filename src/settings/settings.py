@@ -27,7 +27,7 @@ TRAINING = {
 PATHS = {
     'image_dir': 'images',
     'cascade_file': 'haarcascade_frontalface_default.xml',
-    'names_file': 'names.json',
+    'names_file': 'criminal_names.json',
     'trainer_file': 'trainer.yml',
     'criminal_records': 'criminal_records.json',
 }

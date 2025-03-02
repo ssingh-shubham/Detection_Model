@@ -2,3 +2,6 @@ opencv-python
 opencv-contrib-python
 pyyaml
 pillow
+uvicorn
+fastapi
+python-multipart
